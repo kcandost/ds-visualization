@@ -216,7 +216,7 @@
     <div class="controls">
       <div class="input-group">
         <label for="arrayInput">Array:</label>
-        <input id="arrayInput" type="text" value="3,2,1,5" placeholder="e.g., 3,2,1,5"/>
+        <input id="arrayInput" type="text" value="2,2,2" placeholder="e.g., 2,2,2"/>
       </div>
       <button id="toggleBtn" class="primary">▶️</button>
       <button id="resetBtn" class="secondary">🔄</button>
@@ -229,7 +229,7 @@
     <div class="info-panel">
       <div class="info-card">
         <h3>Input Array</h3>
-        <div class="value" id="inputArray">[3,2,1,5]</div>
+        <div class="value" id="inputArray">[2,2,2]</div>
       </div>
       <div class="info-card main-output">
         <h3>🎯 Valid Subsets</h3>
@@ -269,7 +269,7 @@
   <script>
     class BitwiseORVisualizer {
       constructor() {
-        this.nums = [3,2,1,5];
+        this.nums = [2,2,2];
         this.maxOR = 0;
         this.validSubsets = [];
         this.nodes = new Map();
@@ -331,7 +331,7 @@
               this.updateToggleIcon();
             }
           } catch {
-            alert('Invalid input! Please use format: 3,2,1,5');
+            alert('Invalid input! Please use format: 2,2,2');
           }
         });
       }

@@ -1,1 +1,534 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bitwise OR Visualization</title>
+  <style>
+    :root {
+      --bg: #1a1a1a; --surface: #262626; --surface-alt: #333333; --on-surface: #e4e4e4;
+      --primary: #ffa116; --primary-hover: #ffb84d; --accent: #f5576c; --accent-alt: #f093fb;
+      --card-grad-1: #667eea; --card-grad-2: #764ba2;
+      --font-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --fz-xl: 1.8rem; --fz-lg: 1.2rem; --fz-md: 0.9rem; --fz-sm: 0.75rem; --line-height: 1.4;
+      --space-xs: 0.2rem; --space-sm: 0.4rem; --space-md: 0.8rem; --space-lg: 1.6rem;
+      --btn-vert: 0.3rem; --btn-horz: 0.6rem;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.2); --shadow-md: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--on-surface);
+      font-family: var(--font-base); line-height: var(--line-height);
+      padding: var(--space-lg);
+    }
+    .container {
+      max-width: 900px; margin: 0 auto;
+      background: var(--surface); border-radius: 0.75rem;
+      padding: var(--space-lg); box-shadow: var(--shadow-md);
+    }
+    h1 {
+      font-size: var(--fz-xl); text-align: center;
+      margin-bottom: var(--space-lg);
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: var(--space-sm);
+      justify-content: center; margin-bottom: var(--space-lg);
+      font-size: var(--fz-sm);
+    }
+    .input-group {
+      display: flex; align-items: center; gap: var(--space-xs);
+      background: var(--surface-alt); padding: var(--space-xs) var(--space-sm);
+      border-radius: 0.5rem; border: 1px solid #505050;
+    }
+    input[type="text"] {
+      width: 100px; padding: var(--space-xs) var(--space-sm);
+      background: #404040; border: 1px solid #505050;
+      border-radius: 0.5rem; color: var(--on-surface);
+      font-size: var(--fz-sm);
+    }
+    input[type="text"]:focus-visible {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(255,161,22,0.3);
+    }
+    button {
+      padding: var(--btn-vert) var(--btn-horz);
+      font-size: var(--fz-sm); font-weight: 600;
+      border-radius: 0.5rem; cursor: pointer;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    button.primary {
+      background: var(--primary); color: var(--bg); border: none;
+    }
+    button.primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.1);
+      background: var(--primary-hover);
+    }
+    button.secondary {
+      background: transparent; color: var(--on-surface);
+      border: 1px solid var(--on-surface);
+    }
+    button.secondary:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .speed-control {
+      display: flex; align-items: center; gap: var(--space-xs);
+      font-size: var(--fz-sm);
+    }
+    .speed-control input[type="range"] {
+      width: 80px; background: var(--surface-alt);
+    }
+    .speed-control input[type="range"]::-webkit-slider-thumb {
+      background: var(--primary); border-radius: 50%; cursor: pointer;
+    }
+    .info-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: var(--space-md); margin-bottom: var(--space-lg);
+      font-size: var(--fz-sm);
+    }
+    .info-card {
+      position: relative;
+      background: linear-gradient(135deg, var(--card-grad-1), var(--card-grad-2));
+      color: #fff; padding: var(--space-sm);
+      border-radius: 0.5rem; box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .info-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; background: var(--accent);
+      border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem;
+    }
+    .info-card h3 {
+      margin-bottom: var(--space-xs);
+      font-size: var(--fz-sm); font-weight: 500; opacity: 0.9;
+    }
+    .info-card .value {
+      font-size: var(--fz-lg); font-weight: 600;
+    }
+    .info-card.main-output {
+      background: linear-gradient(135deg, var(--accent-alt), var(--accent));
+      transform: scale(1.02);
+    }
+    .current-path {
+      background: var(--surface-alt); border: 1px solid #5a3a3a;
+      border-radius: 0.5rem; padding: var(--space-sm);
+      margin-bottom: var(--space-lg); font-size: var(--fz-sm);
+    }
+    .current-path h4 {
+      font-size: var(--fz-sm); margin-bottom: var(--space-xs);
+      color: #ff9999;
+    }
+    .path-subset {
+      display: inline-block; background: #4a2a2a;
+      color: #ff9999; padding: var(--space-xs);
+      border-radius: 0.25rem; margin: 1px; font-weight: bold;
+      border: 1px solid #5a3a3a;
+    }
+    .visualization {
+      position: relative; background: #1e1e1e;
+      border: 1px solid #404040; border-radius: 0.75rem;
+      padding: var(--space-sm); min-height: 450px;
+      overflow: auto; margin-bottom: var(--space-lg);
+    }
+    .tree-container { position: relative; width: 100%; height: 100%; }
+    .stats {
+      position: absolute; top: var(--space-sm); right: var(--space-sm);
+      display: grid; gap: var(--space-xs); font-size: var(--fz-sm);
+      z-index: 20; background: rgba(0,0,0,0.5);
+      padding: var(--space-xs); border-radius: 0.5rem;
+    }
+    .stat-card {
+      background: var(--surface-alt); border: 1px solid #505050;
+      border-radius: 0.5rem; padding: var(--space-xs) var(--space-sm);
+      text-align: center;
+    }
+    .stat-card h4 {
+      font-size: var(--fz-sm); margin-bottom: var(--space-xs);
+      color: #cccccc;
+    }
+    .stat-card .stat-value {
+      font-size: var(--fz-md); font-weight: 600; color: #fff;
+    }
+    .node {
+      position: absolute; min-width: 80px; padding: var(--space-xs);
+      border: 2px solid #4a5568; border-radius: 0.5rem;
+      background: #2a2a2a; color: var(--on-surface);
+      font-size: var(--fz-sm); font-weight: 500;
+      text-align: center; box-shadow: var(--shadow-sm);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      cursor: pointer;
+    }
+    .node:hover {
+      transform: scale(1.02); box-shadow: var(--shadow-md); z-index: 10;
+    }
+    .node.visited {
+      background: linear-gradient(135deg, #2a4365, #2c5282);
+      border-color: #2c5282; color: #e4e4e4;
+    }
+    .node.current {
+      background: linear-gradient(135deg, #9b2c2c, #c53030);
+      border-color: #c53030;
+      box-shadow: 0 0 15px rgba(197,48,48,0.6);
+      color: #e4e4e4; transform: scale(1.04);
+      animation: pulse 1.5s infinite; z-index: 20;
+    }
+    .node.max-or {
+      background: linear-gradient(135deg, #22543d, #2f855a);
+      border-color: #2f855a;
+      box-shadow: 0 0 15px rgba(47,133,90,0.5);
+      color: #e4e4e4;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(245,101,101,0.7); }
+      50%   { box-shadow: 0 0 0 8px rgba(245,101,101,0); }
+    }
+    .edge {
+      position: absolute; height: 2px; background: #4a5568;
+      transform-origin: left center; transition: background 0.1s ease;
+      z-index: 1;
+    }
+    .edge.active {
+      background: #f56565; height: 3px;
+    }
+    .edge-label {
+      position: absolute; background: #4a5568; color: #fff;
+      padding: 1px 4px; border-radius: 3px;
+      font-size: var(--fz-sm); font-weight: 600;
+      transform: translate(-50%,-50%); z-index: 2;
+      transition: background 0.1s ease;
+    }
+    .edge-label.active {
+      background: #f56565;
+    }
+    @media (max-width: 600px) {
+      .controls, .stats { flex-direction: column; gap: var(--space-xs); }
+      .visualization { min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bitwise OR Visualization</h1>
+    <div class="controls">
+      <div class="input-group">
+        <label for="arrayInput">Array:</label>
+        <input id="arrayInput" type="text" value="3,2,1,5" placeholder="e.g., 3,2,1,5"/>
+      </div>
+      <button id="toggleBtn" class="primary">▶️</button>
+      <button id="resetBtn" class="secondary">🔄</button>
+      <div class="speed-control">
+        <label for="speedSlider">Speed:</label>
+        <input id="speedSlider" type="range" min="100" max="2000" value="800"/>
+        <span id="speedLabel">800</span>
+      </div>
+    </div>
+    <div class="info-panel">
+      <div class="info-card">
+        <h3>Input Array</h3>
+        <div class="value" id="inputArray">[3,2,1,5]</div>
+      </div>
+      <div class="info-card main-output">
+        <h3>🎯 Valid Subsets</h3>
+        <div class="value" id="validCount">0</div>
+      </div>
+      <div class="info-card">
+        <h3>Maximum OR</h3>
+        <div class="value" id="maxOR">7</div>
+      </div>
+      <div class="info-card">
+        <h3>Subsets Explored</h3>
+        <div class="value" id="totalExplored">0</div>
+      </div>
+    </div>
+    <div class="current-path">
+      <h4>🎯 Current Path & Subset:</h4>
+      <div id="currentPath">Ready to start…</div>
+    </div>
+    <div class="visualization">
+      <div class="tree-container" id="treeContainer"></div>
+      <div class="stats">
+        <div class="stat-card">
+          <h4>Progress</h4>
+          <div class="stat-value" id="progress">0%</div>
+        </div>
+        <div class="stat-card">
+          <h4>Current OR</h4>
+          <div class="stat-value" id="currentOR">0</div>
+        </div>
+        <div class="stat-card">
+          <h4>Depth</h4>
+          <div class="stat-value" id="recursionDepth">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    class BitwiseORVisualizer {
+      constructor() {
+        this.nums = [3,2,1,5];
+        this.maxOR = 0;
+        this.validSubsets = [];
+        this.nodes = new Map();
+        this.edges = [];
+        this.currentStep = 0;
+        this.leafCount = 0;
+        this.animationSteps = [];
+        this.isAnimating = false;
+        this.speed = 800;
+        this.initializeElements();
+        this.setupEventListeners();
+        this.calculateMaxOR();
+        this.generateAnimationSteps();
+        this.renderTree();
+        this.updateDisplay();
+        this.updateToggleIcon();
+      }
+
+      initializeElements() {
+        this.arrayInput = document.getElementById('arrayInput');
+        this.toggleBtn = document.getElementById('toggleBtn');
+        this.resetBtn = document.getElementById('resetBtn');
+        this.speedSlider = document.getElementById('speedSlider');
+        this.speedLabel = document.getElementById('speedLabel');
+        this.treeContainer = document.getElementById('treeContainer');
+        this.inputArrayEl = document.getElementById('inputArray');
+        this.maxOREl = document.getElementById('maxOR');
+        this.validCountEl = document.getElementById('validCount');
+        this.totalExploredEl = document.getElementById('totalExplored');
+        this.currentPathEl = document.getElementById('currentPath');
+        this.progressEl = document.getElementById('progress');
+        this.currentOREl = document.getElementById('currentOR');
+        this.recursionDepthEl = document.getElementById('recursionDepth');
+      }
+
+      setupEventListeners() {
+        this.toggleBtn.addEventListener('click', () => {
+          if (this.isAnimating) this.pauseAnimation();
+          else this.startAnimation();
+          this.updateToggleIcon();
+        });
+        this.resetBtn.addEventListener('click', () => {
+          this.reset();
+          this.updateToggleIcon();
+        });
+        this.speedSlider.addEventListener('input', e => {
+          this.speed = parseInt(e.target.value);
+          this.speedLabel.textContent = this.speed;
+        });
+        this.arrayInput.addEventListener('change', () => {
+          const input = this.arrayInput.value.trim();
+          try {
+            const newNums = input.split(',')
+              .map(x => parseInt(x.trim()))
+              .filter(x => !isNaN(x) && x>0);
+            if (newNums.length>0 && newNums.length<=16) {
+              this.nums = newNums;
+              this.reset();
+              this.updateToggleIcon();
+            }
+          } catch {
+            alert('Invalid input! Please use format: 3,2,1,5');
+          }
+        });
+      }
+
+      updateToggleIcon() {
+        this.toggleBtn.textContent = this.isAnimating ? '⏸️' : '▶️';
+      }
+
+      calculateMaxOR() {
+        this.maxOR = 0;
+        for (const num of this.nums) this.maxOR |= num;
+      }
+
+      generateAnimationSteps() {
+        this.animationSteps = [];
+        this.nodes.clear();
+        this.edges = [];
+        const dfs = (i, currentOR, subset, path) => {
+          const nodeId = `${i}-${currentOR}-${subset.join(',')}`;
+          this.animationSteps.push({ type:'visit', nodeId, i, currentOR, subset:[...subset], path:[...path], depth:i });
+          this.nodes.set(nodeId, { i, currentOR, subset:[...subset], isLeaf:i===this.nums.length, isMaxOR:false, x:0, y:0 });
+          if (i===this.nums.length) {
+            if (currentOR===this.maxOR && subset.length>0) {
+              this.nodes.get(nodeId).isMaxOR = true;
+              this.animationSteps.push({ type:'found', nodeId, subset:[...subset] });
+            }
+            this.animationSteps.push({ type:'return', nodeId, returnValue:(currentOR===this.maxOR && subset.length>0)?1:0 });
+            return (currentOR===this.maxOR && subset.length>0)?1:0;
+          }
+          const incId = `${i+1}-${currentOR|this.nums[i]}-${[...subset,this.nums[i]].join(',')}`;
+          this.edges.push({ from:nodeId, to:incId, label:`Include ${this.nums[i]}`, type:'include' });
+          const inc = dfs(i+1, currentOR|this.nums[i], [...subset,this.nums[i]], [...path,`include ${this.nums[i]}`]);
+          const excId = `${i+1}-${currentOR}-${subset.join(',')}`;
+          this.edges.push({ from:nodeId, to:excId, label:'Skip', type:'exclude' });
+          const exc = dfs(i+1, currentOR, [...subset], [...path,`skip ${this.nums[i]}`]);
+          const total = inc + exc;
+          this.animationSteps.push({ type:'return', nodeId, returnValue:total });
+          return total;
+        };
+        dfs(0,0,[],[]);
+      }
+
+      renderTree() {
+        this.treeContainer.innerHTML = '';
+        this.calculateNodePositions();
+        this.edges.forEach((e,i)=>{
+          const f = this.nodes.get(e.from), t = this.nodes.get(e.to);
+          if (f && t) this.renderEdge(f,t,e,i);
+        });
+        this.nodes.forEach((n,id)=>this.renderNode(n,id));
+        const maxX = Math.max(...[...this.nodes.values()].map(n=>n.x))+200;
+        const maxY = Math.max(...[...this.nodes.values()].map(n=>n.y))+100;
+        this.treeContainer.style.width = Math.max(maxX,800)+'px';
+        this.treeContainer.style.height = Math.max(maxY,500)+'px';
+      }
+
+      calculateNodePositions() {
+        const levels = new Map();
+        this.nodes.forEach((n,id)=>{
+          if (!levels.has(n.i)) levels.set(n.i,[]);
+          levels.get(n.i).push({ node:n });
+        });
+        levels.forEach((arr,lvl)=>{
+          const y = 50+lvl*120;
+          const totalW = Math.max(800, arr.length*180);
+          const spacing = totalW/(arr.length+1);
+          arr.forEach((item,i)=>{
+            item.node.x = 50+(i+1)*spacing-70;
+            item.node.y = y;
+          });
+        });
+      }
+
+      renderNode(node,nodeId) {
+        const el = document.createElement('div');
+        el.className = 'node unvisited';
+        el.id = 'node-'+nodeId;
+        el.style.left = node.x+'px';
+        el.style.top = node.y+'px';
+        const subset = node.subset.length>0?`[${node.subset.join(',')}]`:'[]';
+        const bin = node.currentOR.toString(2).padStart(3,'0');
+        el.innerHTML = `
+          <div>i=${node.i}, OR=${node.currentOR}</div>
+          <div style="font-size:0.7rem;opacity:0.8;">Binary: ${bin}</div>
+          <div style="font-size:0.7rem;">${subset}</div>
+        `;
+        el.addEventListener('click',()=>{
+          alert(
+            `Index: ${node.i}\nOR: ${node.currentOR}\nSubset: ${subset}`+
+            `\nLeaf: ${node.isLeaf}\nMaxOR: ${node.isMaxOR}`
+          );
+        });
+        this.treeContainer.appendChild(el);
+      }
+
+      renderEdge(from,to,edge,index) {
+        const dx = to.x - from.x, dy = to.y - from.y;
+        const dist = Math.hypot(dx,dy), ang = Math.atan2(dy,dx)*180/Math.PI;
+        const e = document.createElement('div');
+        e.className = 'edge'; e.id = 'edge-'+index;
+        e.style.left = (from.x+70)+'px'; e.style.top = (from.y+40)+'px';
+        e.style.width = dist+'px'; e.style.transform = `rotate(${ang}deg)`;
+        const lbl = document.createElement('div');
+        lbl.className = 'edge-label'; lbl.textContent = edge.label;
+        lbl.style.left = (from.x+70+dx/2)+'px';
+        lbl.style.top = (from.y+40+dy/2)+'px';
+        this.treeContainer.appendChild(e);
+        this.treeContainer.appendChild(lbl);
+      }
+
+      async startAnimation() {
+        if (this.isAnimating) return;
+        this.validSubsets = [];
+        this.validCountEl.textContent = '0';
+        this.leafCount = 0;
+        this.totalExploredEl.textContent = '0';
+        this.isAnimating = true;
+        this.updateToggleIcon();
+        for (let i=this.currentStep; i<this.animationSteps.length; i++) {
+          if (!this.isAnimating) break;
+          await this.executeStep(this.animationSteps[i]);
+          this.currentStep = i+1;
+          this.updateDisplay();
+          await new Promise(r=>setTimeout(r,this.speed));
+        }
+        this.isAnimating = false;
+        this.updateToggleIcon();
+      }
+
+      pauseAnimation() {
+        this.isAnimating = false;
+        this.updateToggleIcon();
+      }
+
+      async executeStep(step) {
+        document.querySelectorAll('.node.current').forEach(el=>{
+          el.classList.remove('current');
+          el.classList.add('visited');
+        });
+        const el = document.getElementById('node-'+step.nodeId);
+        if (el) {
+          el.classList.remove('unvisited');
+          el.classList.add('current');
+          if (step.type==='found') {
+            this.validSubsets.push(step.subset);
+            this.validCountEl.textContent = this.validSubsets.length;
+            el.classList.add('max-or');
+          }
+          // removed scrollIntoView
+        }
+        if (step.type==='visit' && step.i===this.nums.length) {
+          this.leafCount++;
+          this.totalExploredEl.textContent = this.leafCount;
+        }
+        if (step.subset) {
+          const html = step.subset.length>0
+            ? step.subset.map(n=>`<span class="path-subset">${n}</span>`).join(' ')
+            : '<span class="path-subset">Empty Set</span>';
+          this.currentPathEl.innerHTML = `Current subset: ${html}`;
+        }
+      }
+
+      updateDisplay() {
+        this.inputArrayEl.textContent    = `[${this.nums.join(',')}]`;
+        this.maxOREl.textContent         = this.maxOR;
+        const pct = this.animationSteps.length
+          ? Math.round(this.currentStep/this.animationSteps.length*100)+'%'
+          : '0%';
+        this.progressEl.textContent = pct;
+        if (this.currentStep>0 && this.currentStep<=this.animationSteps.length) {
+          const cur = this.animationSteps[this.currentStep-1];
+          this.currentOREl.textContent      = cur.currentOR||0;
+          this.recursionDepthEl.textContent = cur.depth||0;
+        }
+      }
+
+      reset() {
+        this.isAnimating = false;
+        this.currentStep = 0;
+        this.validSubsets = [];
+        this.leafCount = 0;
+        this.calculateMaxOR();
+        this.generateAnimationSteps();
+        this.renderTree();
+        this.updateDisplay();
+        this.inputArrayEl.textContent     = `[${this.nums.join(',')}]`;
+        this.maxOREl.textContent          = this.maxOR;
+        this.validCountEl.textContent     = '0';
+        this.totalExploredEl.textContent  = '0';
+        this.progressEl.textContent       = '0%';
+        this.currentOREl.textContent      = '0';
+        this.recursionDepthEl.textContent = '0';
+        this.currentPathEl.innerHTML      = 'Ready to start…';
+      }
+    }
+
+    window.addEventListener('load', () => new BitwiseORVisualizer());
+  </script>
+</body>
+</html>
